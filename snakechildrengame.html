@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🐍 Cute Snake Game</title>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #89f7fe, #66a6ff);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "Comic Sans MS", cursive;
+    }
+
+    .game-box {
+        background: white;
+        padding: 20px;
+        border-radius: 25px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        text-align: center;
+        width: 440px;
+    }
+
+    h1 {
+        color: #4CAF50;
+        margin-bottom: 5px;
+    }
+
+    #score {
+        font-size: 22px;
+        color: #ff9800;
+        margin-bottom: 10px;
+    }
+
+    canvas {
+        background: #eaffea;
+        border: 5px solid #4CAF50;
+        border-radius: 15px;
+        display: none;
+    }
+
+    button {
+        padding: 12px 30px;
+        font-size: 20px;
+        background: #FFD700;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    button:hover {
+        background: #FFC107;
+    }
+
+    p {
+        margin-top: 10px;
+        font-size: 16px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="game-box">
+    <h1>🐍 Snake Game</h1>
+    <div id="score">⭐ Score: 0</div>
+    <button id="startBtn">▶ START GAME</button>
+    <canvas id="game" width="400" height="400"></canvas>
+    <p>⬆️⬇️⬅️➡️ Use Arrow Keys</p>
+</div>
+
+<!-- Sounds -->
+<audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="eatSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+<audio id="gameOverSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const startBtn = document.getElementById("startBtn");
+const scoreText = document.getElementById("score");
+
+const startSound = document.getElementById("startSound");
+const eatSound = document.getElementById("eatSound");
+const gameOverSound = document.getElementById("gameOverSound");
+
+const box = 20;
+let game;
+let snake, direction, food, score;
+let stars = [];
+
+const SPEED = 180; // 👶 slower speed for kids
+
+startBtn.onclick = () => {
+    startSound.play();
+    startBtn.style.display = "none";
+    canvas.style.display = "block";
+    startGame();
+};
+
+function startGame() {
+    snake = [{ x: 200, y: 200 }];
+    direction = "RIGHT";
+    score = 0;
+    scoreText.innerHTML = "⭐ Score: 0";
+    food = randomFood();
+    stars = [];
+
+    clearInterval(game);
+    game = setInterval(draw, SPEED);
+}
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+    if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+    if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+
+function randomFood() {
+    return {
+        x: Math.floor(Math.random() * 19) * box,
+        y: Math.floor(Math.random() * 19) * box
+    };
+}
+
+function drawSnakeHead(head) {
+    ctx.fillStyle = "#4CAF50";
+    ctx.fillRect(head.x, head.y, box, box);
+
+    // Eyes
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(head.x + 6, head.y + 6, 3, 0, Math.PI * 2);
+    ctx.arc(head.x + 14, head.y + 6, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(head.x + 6, head.y + 6, 1.5, 0, Math.PI * 2);
+    ctx.arc(head.x + 14, head.y + 6, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tongue
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(head.x + 10, head.y + 20);
+    ctx.lineTo(head.x + 10, head.y + 28);
+    ctx.stroke();
+}
+
+// ⭐ Star animation
+function createStars(x, y) {
+    for (let i = 0; i < 6; i++) {
+        stars.push({
+            x: x + box / 2,
+            y: y + box / 2,
+            dx: (Math.random() - 0.5) * 4,
+            dy: (Math.random() - 0.5) * 4,
+            life: 20
+        });
+    }
+}
+
+function drawStars() {
+    stars.forEach((s, i) => {
+        ctx.fillStyle = "gold";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        s.x += s.dx;
+        s.y += s.dy;
+        s.life--;
+        if (s.life <= 0) stars.splice(i, 1);
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Food
+    ctx.beginPath();
+    ctx.arc(food.x + box/2, food.y + box/2, box/2.5, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFD700";
+    ctx.fill();
+
+    // Snake
+    snake.forEach((part, i) => {
+        if (i === 0) drawSnakeHead(part);
+        else {
+            ctx.fillStyle = "#81C784";
+            ctx.fillRect(part.x, part.y, box, box);
+        }
+    });
+
+    drawStars();
+
+    let head = { ...snake[0] };
+    if (direction === "UP") head.y -= box;
+    if (direction === "DOWN") head.y += box;
+    if (direction === "LEFT") head.x -= box;
+    if (direction === "RIGHT") head.x += box;
+
+    // Eat food
+    if (head.x === food.x && head.y === food.y) {
+        eatSound.play();
+        score++;
+        scoreText.innerHTML = "⭐ Score: " + score;
+        createStars(food.x, food.y);
+        food = randomFood();
+    } else {
+        snake.pop();
+    }
+
+    // Game over
+    if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        snake.some((p, i) => i > 0 && p.x === head.x && p.y === head.y)
+    ) {
+        gameOverSound.play();
+        clearInterval(game);
+        alert("🎉 Game Over!\n⭐ Your Score: " + score);
+        canvas.style.display = "none";
+        startBtn.style.display = "inline-block";
+        return;
+    }
+
+    snake.unshift(head);
+}
+</script>
+
+</body>
+</html>
