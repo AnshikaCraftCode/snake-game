@@ -50,13 +50,6 @@ JavaScript – Game logic and functionality
 4. Avoid hitting walls and the snake’s own body
 
 
-📂 Project Structure
-
-SnakeGame/
-│── index.html
-│── style.css
-│── script.js
-
 📸 Preview
 
 (You can add a screenshot or GIF of the game here later)
